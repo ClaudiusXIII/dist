@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>节拍破界 BEATBREAKER — 可玩 Demo</title>
+    <meta name="description" content="《节拍破界》Boss Rush 可玩 Demo — 节奏动作 / 弹幕闪避 / 构筑进化" />
+    <link rel="icon" href="../../images/portrait.jpg" />
+    <style>
+      :root {
+        --bg: #04060e;
+        --ink: #eef3ff;
+        --ink-60: rgba(238, 243, 255, 0.6);
+        --ink-30: rgba(238, 243, 255, 0.3);
+        --line: rgba(255, 255, 255, 0.1);
+        --accent: #7fb0ff;
+        --accent-2: #b78cff;
+        --mono: 'JetBrains Mono', Consolas, monospace;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
+      body {
+        background:
+          radial-gradient(1200px 700px at 20% 0%, rgba(88, 62, 190, 0.22), transparent 62%),
+          radial-gradient(900px 600px at 85% 20%, rgba(46, 107, 255, 0.16), transparent 62%),
+          var(--bg);
+        color: var(--ink);
+        font-family: 'Archivo', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 16px clamp(16px, 3vw, 36px);
+        border-bottom: 1px solid var(--line);
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ink-30);
+        flex: none;
+      }
+      .bar a { color: var(--ink-60); text-decoration: none; transition: color 0.25s; }
+      .bar a:hover { color: #fff; }
+      .bar .mid { color: var(--ink-60); letter-spacing: 0.24em; }
+      .bar button {
+        font: inherit;
+        color: var(--ink-60);
+        background: none;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 7px 14px;
+        cursor: pointer;
+        transition: all 0.25s;
+      }
+      .bar button:hover { color: #fff; border-color: rgba(127, 176, 255, 0.6); }
+      .bar__right { display: flex; align-items: center; gap: 14px; }
+      .bar__link {
+        color: var(--ink-60);
+        text-decoration: none;
+        letter-spacing: 0.14em;
+        transition: color 0.25s;
+      }
+      .bar__link:hover { color: #fff; }
+
+      .stage {
+        flex: 1;
+        display: grid;
+        place-items: center;
+        padding: clamp(10px, 2vw, 26px);
+        min-height: 0;
+      }
+      .screen {
+        position: relative;
+        width: 100%;
+        max-width: min(1280px, calc((100vh - 150px) * 16 / 9));
+        aspect-ratio: 16 / 9;
+        background: #05070f;
+        border: 1px solid var(--line);
+        box-shadow: 0 40px 120px -50px rgba(90, 130, 255, 0.8);
+        overflow: hidden;
+      }
+      #unity-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        background: #05070f;
+        outline: none;
+      }
+      .loader {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background: radial-gradient(60% 60% at 50% 40%, #0b1229 0%, #04060e 78%);
+        transition: opacity 0.6s ease;
+        z-index: 5;
+      }
+      .loader.is-done { opacity: 0; pointer-events: none; }
+      .loader__title {
+        font-size: clamp(22px, 3vw, 34px);
+        font-weight: 800;
+        letter-spacing: 0.06em;
+      }
+      .loader__title span {
+        display: block;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 0.4em;
+        color: var(--accent);
+        margin-top: 8px;
+        text-align: center;
+      }
+      .loader__bar {
+        width: min(320px, 60%);
+        height: 2px;
+        background: rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+      }
+      .loader__bar i {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 14px rgba(127, 176, 255, 0.8);
+        transition: width 0.2s ease;
+      }
+      .loader__pct {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        color: var(--ink-30);
+      }
+      .loader__hint {
+        font-size: 12px;
+        color: var(--ink-30);
+        letter-spacing: 0.05em;
+      }
+      .keys {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px 22px;
+        padding: 12px clamp(16px, 3vw, 36px) 16px;
+        border-top: 1px solid var(--line);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        color: var(--ink-30);
+        flex: none;
+      }
+      .keys b {
+        color: var(--ink);
+        font-weight: 500;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 2px 7px;
+        margin-right: 6px;
+      }
+      #warning {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        font-size: 12px;
+        z-index: 6;
+      }
+      #warning div {
+        background: rgba(255, 61, 0, 0.85);
+        color: #fff;
+        padding: 8px 14px;
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <a href="../../">← 返回作品集</a>
+      <span class="mid">Beatbreaker / Playable Demo</span>
+      <div class="bar__right">
+        <a class="bar__link" href="/media/beatbreaker-demo.mp4" target="_blank" rel="noreferrer">演示视频 ↗</a>
+        <button id="fs">全屏</button>
+      </div>
+    </header>
+
+    <div class="stage">
+      <div class="screen" id="screen">
+        <canvas id="unity-canvas" tabindex="-1"></canvas>
+        <div class="loader" id="loader">
+          <div class="loader__title">
+            节拍破界
+            <span>BEATBREAKER</span>
+          </div>
+          <div class="loader__bar"><i id="bar"></i></div>
+          <div class="loader__pct" id="pct">0%</div>
+          <p class="loader__hint">首次加载约 17 MB · 建议先玩教学关</p>
+        </div>
+        <div id="warning"></div>
+      </div>
+    </div>
+
+    <footer class="keys">
+      <span><b>WASD</b>移动</span>
+      <span><b>J</b>攻击</span>
+      <span><b>K</b>防御</span>
+      <span><b>L</b>冲刺</span>
+      <span><b>Space</b>共鸣</span>
+      <span><b>Esc</b>暂停</span>
+    </footer>
+
+    <script>
+      const canvas = document.querySelector('#unity-canvas');
+      const loader = document.querySelector('#loader');
+      const bar = document.querySelector('#bar');
+      const pct = document.querySelector('#pct');
+      const warning = document.querySelector('#warning');
+
+      function unityShowBanner(msg, type) {
+        const div = document.createElement('div');
+        div.innerHTML = msg;
+        warning.appendChild(div);
+        if (type !== 'error') setTimeout(() => div.remove(), 6000);
+      }
+
+      const buildUrl = 'Build';
+      const config = {
+        dataUrl: buildUrl + '/webgl.data.unityweb',
+        frameworkUrl: buildUrl + '/webgl.framework.js.unityweb',
+        codeUrl: buildUrl + '/webgl.wasm.unityweb',
+        streamingAssetsUrl: 'StreamingAssets',
+        companyName: 'BeatBreaker Studio',
+        productName: 'BeatBreaker',
+        productVersion: '1.0',
+        showBanner: unityShowBanner,
+      };
+
+      const script = document.createElement('script');
+      script.src = buildUrl + '/webgl.loader.js';
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          const p = Math.round(progress * 100);
+          bar.style.width = p + '%';
+          pct.textContent = p + '%';
+        })
+          .then((instance) => {
+            window.unityInstance = instance;
+            loader.classList.add('is-done');
+            setTimeout(() => loader.remove(), 800);
+          })
+          .catch((message) => {
+            loader.querySelector('.loader__hint').textContent = message;
+          });
+      };
+      document.body.appendChild(script);
+
+      document.querySelector('#fs').addEventListener('click', () => {
+        const el = document.querySelector('#screen');
+        if (!document.fullscreenElement) el.requestFullscreen?.();
+        else document.exitFullscreen?.();
+      });
+
+      canvas.addEventListener('pointerdown', () => canvas.focus());
+    </script>
+  </body>
+</html>

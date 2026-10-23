@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1120" viewBox="0 0 900 1120">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#0B1330"/>
+      <stop offset="0.55" stop-color="#070B18"/>
+      <stop offset="1" stop-color="#04060E"/>
+    </linearGradient>
+    <radialGradient id="neb" cx="0.28" cy="0.22" r="0.6">
+      <stop offset="0" stop-color="#5B3FBF" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#5B3FBF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="neb2" cx="0.8" cy="0.72" r="0.5">
+      <stop offset="0" stop-color="#2E6BFF" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#2E6BFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hx" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.6" stop-color="#D9E6FF"/>
+      <stop offset="1" stop-color="#9FC0FF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="1120" fill="url(#bg)"/>
+  <rect width="900" height="1120" fill="url(#neb)"/>
+  <rect width="900" height="1120" fill="url(#neb2)"/>
+
+  <g fill="#ffffff">
+    <circle cx="120" cy="150" r="1.6" opacity="0.8"/>
+    <circle cx="260" cy="92" r="1" opacity="0.5"/>
+    <circle cx="410" cy="176" r="1.3" opacity="0.7"/>
+    <circle cx="560" cy="110" r="0.9" opacity="0.45"/>
+    <circle cx="700" cy="200" r="1.5" opacity="0.65"/>
+    <circle cx="800" cy="120" r="1" opacity="0.4"/>
+    <circle cx="180" cy="300" r="1" opacity="0.35"/>
+    <circle cx="640" cy="330" r="1.2" opacity="0.5"/>
+    <circle cx="760" cy="430" r="1.6" opacity="0.6"/>
+    <circle cx="90" cy="470" r="1.1" opacity="0.4"/>
+    <circle cx="330" cy="520" r="0.9" opacity="0.3"/>
+    <circle cx="500" cy="600" r="1.2" opacity="0.45"/>
+    <circle cx="820" cy="640" r="1" opacity="0.4"/>
+    <circle cx="140" cy="720" r="1.4" opacity="0.5"/>
+    <circle cx="700" cy="800" r="1.1" opacity="0.4"/>
+    <circle cx="240" cy="880" r="1.3" opacity="0.45"/>
+    <circle cx="480" cy="960" r="1" opacity="0.35"/>
+    <circle cx="820" cy="1010" r="1.2" opacity="0.4"/>
+    <circle cx="360" cy="1040" r="0.9" opacity="0.3"/>
+  </g>
+
+  <g stroke="#9FC0FF" stroke-opacity="0.14" stroke-width="1">
+    <path d="M0 280H900M0 560H900M0 840H900"/>
+    <path d="M300 0V1120M600 0V1120"/>
+  </g>
+
+  <text x="64" y="96" fill="#CFE0FF" fill-opacity="0.62"
+        font-family="Consolas, monospace" font-size="19" letter-spacing="7">PORTRAIT / 2026</text>
+
+  <text x="820" y="180" fill="#CFE0FF" fill-opacity="0.5"
+        font-family="Consolas, monospace" font-size="17" letter-spacing="8"
+        transform="rotate(90 820 180)">HU XIN — GAME DESIGNER</text>
+
+  <text x="52" y="880" fill="url(#hx)"
+        font-family="Arial Black, Archivo, sans-serif" font-size="440" font-weight="900"
+        letter-spacing="-24">HX</text>
+
+  <g stroke="#CFE0FF" stroke-opacity="0.55" stroke-width="2" fill="none">
+    <path d="M44 44 h44 M44 44 v44"/>
+    <path d="M856 44 h-44 M856 44 v44"/>
+    <path d="M44 1076 h44 M44 1076 v-44"/>
+    <path d="M856 1076 h-44 M856 1076 v-44"/>
+  </g>
+</svg>
