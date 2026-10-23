@@ -2,9 +2,14 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
     <title>节拍破界 BEATBREAKER — 可玩 Demo</title>
     <meta name="description" content="《节拍破界》Boss Rush 可玩 Demo — 节奏动作 / 弹幕闪避 / 构筑进化" />
+    <meta name="theme-color" content="#04060e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="icon" href="../../images/portrait.jpg" />
     <style>
       :root {
@@ -12,88 +17,331 @@
         --ink: #eef3ff;
         --ink-60: rgba(238, 243, 255, 0.6);
         --ink-30: rgba(238, 243, 255, 0.3);
-        --line: rgba(255, 255, 255, 0.1);
+        --line: rgba(255, 255, 255, 0.12);
         --accent: #7fb0ff;
         --accent-2: #b78cff;
         --mono: 'JetBrains Mono', Consolas, monospace;
       }
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { height: 100%; }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
       body {
-        background:
-          radial-gradient(1200px 700px at 20% 0%, rgba(88, 62, 190, 0.22), transparent 62%),
-          radial-gradient(900px 600px at 85% 20%, rgba(46, 107, 255, 0.16), transparent 62%),
-          var(--bg);
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
         color: var(--ink);
         font-family: 'Archivo', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
+        touch-action: none;
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
       }
-      .bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        padding: 16px clamp(16px, 3vw, 36px);
-        border-bottom: 1px solid var(--line);
-        font-family: var(--mono);
-        font-size: 10.5px;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: var(--ink-30);
-        flex: none;
-      }
-      .bar a { color: var(--ink-60); text-decoration: none; transition: color 0.25s; }
-      .bar a:hover { color: #fff; }
-      .bar .mid { color: var(--ink-60); letter-spacing: 0.24em; }
-      .bar button {
-        font: inherit;
-        color: var(--ink-60);
-        background: none;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 7px 14px;
-        cursor: pointer;
-        transition: all 0.25s;
-      }
-      .bar button:hover { color: #fff; border-color: rgba(127, 176, 255, 0.6); }
-      .bar__right { display: flex; align-items: center; gap: 14px; }
-      .bar__link {
-        color: var(--ink-60);
-        text-decoration: none;
-        letter-spacing: 0.14em;
-        transition: color 0.25s;
-      }
-      .bar__link:hover { color: #fff; }
 
-      .stage {
-        flex: 1;
-        display: grid;
-        place-items: center;
-        padding: clamp(10px, 2vw, 26px);
-        min-height: 0;
-      }
-      .screen {
-        position: relative;
-        width: 100%;
-        max-width: min(1280px, calc((100vh - 150px) * 16 / 9));
-        aspect-ratio: 16 / 9;
-        background: #05070f;
-        border: 1px solid var(--line);
-        box-shadow: 0 40px 120px -50px rgba(90, 130, 255, 0.8);
-        overflow: hidden;
-      }
+      /* ---------- 画布铺满 ---------- */
       #unity-canvas {
+        position: fixed;
+        inset: 0;
         width: 100%;
         height: 100%;
         display: block;
         background: #05070f;
         outline: none;
+        z-index: 1;
       }
-      .loader {
-        position: absolute;
+
+      /* ---------- 顶部 HUD（自动隐藏） ---------- */
+      .hud {
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: 20;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: max(14px, env(safe-area-inset-top)) clamp(14px, 2vw, 26px) 40px;
+        background: linear-gradient(to bottom, rgba(4, 6, 14, 0.78), rgba(4, 6, 14, 0));
+        pointer-events: none;
+        transition: opacity 0.45s ease, transform 0.45s ease;
+      }
+      .hud > * {
+        pointer-events: auto;
+      }
+      .hud.is-hidden {
+        opacity: 0;
+        transform: translateY(-8px);
+        pointer-events: none;
+      }
+      .hud.is-hidden > * {
+        pointer-events: none;
+      }
+      .hud__back,
+      .hud__btn {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-60);
+        text-decoration: none;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 14px;
+        background: rgba(6, 10, 20, 0.55);
+        backdrop-filter: blur(10px);
+        transition: all 0.25s;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .hud__back:hover,
+      .hud__btn:hover {
+        color: #fff;
+        border-color: rgba(127, 176, 255, 0.6);
+      }
+      .hud__title {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: rgba(238, 243, 255, 0.85);
+        padding-top: 8px;
+      }
+      .hud__title em {
+        font-style: normal;
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.3em;
+        color: var(--accent);
+        margin-left: 10px;
+      }
+      .hud__tools {
+        display: flex;
+        gap: 8px;
+      }
+
+      /* ---------- 底部键位提示（桌面） ---------- */
+      .hint {
+        position: fixed;
+        left: 50%;
+        bottom: max(18px, env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        z-index: 18;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px 18px;
+        padding: 9px 18px;
+        border-radius: 999px;
+        background: rgba(6, 10, 20, 0.5);
+        border: 1px solid var(--line);
+        backdrop-filter: blur(10px);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: var(--ink-30);
+        transition: opacity 0.6s ease;
+        pointer-events: none;
+      }
+      .hint b {
+        color: rgba(238, 243, 255, 0.9);
+        font-weight: 500;
+        margin-right: 5px;
+      }
+      .hint.is-hidden {
+        opacity: 0;
+      }
+
+      /* ---------- 触屏控制 ---------- */
+      .pad {
+        position: fixed;
         inset: 0;
+        z-index: 15;
+        display: none;
+        pointer-events: none;
+      }
+      body.is-touch .pad {
+        display: block;
+      }
+      .pad > * {
+        pointer-events: auto;
+      }
+
+      .stick {
+        position: absolute;
+        left: max(24px, env(safe-area-inset-left));
+        bottom: max(24px, env(safe-area-inset-bottom));
+        width: 132px;
+        height: 132px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(127, 176, 255, 0.14),
+          rgba(6, 10, 20, 0.42)
+        );
+        backdrop-filter: blur(6px);
+        touch-action: none;
+      }
+      .stick::before {
+        content: '';
+        position: absolute;
+        inset: 50%;
+        width: 1px;
+        height: 1px;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+      }
+      .stick__knob {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 58px;
+        height: 58px;
+        margin: -29px 0 0 -29px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #cfe1ff, #6f9fe8 62%, #33507f);
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55), 0 0 26px rgba(127, 176, 255, 0.35);
+        transition: transform 0.06s linear;
+      }
+
+      .btns {
+        position: absolute;
+        right: max(22px, env(safe-area-inset-right));
+        bottom: max(22px, env(safe-area-inset-bottom));
+        width: 210px;
+        height: 190px;
+      }
+      .btn-key {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(10, 16, 32, 0.55);
+        backdrop-filter: blur(8px);
+        color: rgba(238, 243, 255, 0.9);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        touch-action: none;
+        transition: transform 0.1s ease, background 0.1s ease, box-shadow 0.1s ease;
+      }
+      .btn-key small {
+        display: block;
+        font-family: var(--mono);
+        font-size: 8px;
+        font-weight: 400;
+        letter-spacing: 0.14em;
+        color: var(--ink-30);
+        margin-top: 2px;
+      }
+      .btn-key.is-down {
+        transform: scale(0.92);
+        background: rgba(127, 176, 255, 0.34);
+        border-color: rgba(127, 176, 255, 0.9);
+        box-shadow: 0 0 26px rgba(127, 176, 255, 0.55);
+      }
+      .btn-key--attack {
+        right: 0;
+        bottom: 26px;
+        width: 78px;
+        height: 78px;
+      }
+      .btn-key--dash {
+        right: 74px;
+        bottom: 0;
+        width: 62px;
+        height: 62px;
+      }
+      .btn-key--guard {
+        right: 0;
+        bottom: 112px;
+        width: 62px;
+        height: 62px;
+      }
+      .btn-key--reso {
+        right: 92px;
+        bottom: 96px;
+        width: 66px;
+        height: 66px;
+        border-color: rgba(183, 140, 255, 0.5);
+        color: #e6dbff;
+      }
+      .btn-key--reso.is-down {
+        background: rgba(183, 140, 255, 0.36);
+        border-color: rgba(183, 140, 255, 0.95);
+        box-shadow: 0 0 26px rgba(183, 140, 255, 0.6);
+      }
+
+      /* ---------- 竖屏提示 ---------- */
+      .rotate {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        padding: 32px;
+        text-align: center;
+        background: radial-gradient(80% 60% at 50% 40%, #0b1229, #04060e 78%);
+      }
+      body.is-touch.is-portrait .rotate {
+        display: flex;
+      }
+      .rotate__icon {
+        width: 68px;
+        height: 68px;
+        border: 1.5px solid rgba(127, 176, 255, 0.6);
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 26px;
+        color: var(--accent);
+        animation: tilt 2.4s ease-in-out infinite;
+      }
+      @keyframes tilt {
+        0%,
+        100% {
+          transform: rotate(0deg);
+        }
+        45% {
+          transform: rotate(-90deg);
+        }
+        70% {
+          transform: rotate(-90deg);
+        }
+      }
+      .rotate h2 {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .rotate p {
+        font-size: 12.5px;
+        line-height: 1.8;
+        color: var(--ink-60);
+        max-width: 260px;
+      }
+      .rotate button {
+        margin-top: 4px;
+        font: inherit;
+        font-size: 13px;
+        color: #060a16;
+        background: #eaf1ff;
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 26px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      /* ---------- 加载 ---------- */
+      .loader {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -101,9 +349,11 @@
         gap: 18px;
         background: radial-gradient(60% 60% at 50% 40%, #0b1229 0%, #04060e 78%);
         transition: opacity 0.6s ease;
-        z-index: 5;
       }
-      .loader.is-done { opacity: 0; pointer-events: none; }
+      .loader.is-done {
+        opacity: 0;
+        pointer-events: none;
+      }
       .loader__title {
         font-size: clamp(22px, 3vw, 34px);
         font-weight: 800;
@@ -144,78 +394,97 @@
         color: var(--ink-30);
         letter-spacing: 0.05em;
       }
-      .keys {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px 22px;
-        padding: 12px clamp(16px, 3vw, 36px) 16px;
-        border-top: 1px solid var(--line);
-        font-family: var(--mono);
-        font-size: 10px;
-        letter-spacing: 0.12em;
-        color: var(--ink-30);
-        flex: none;
-      }
-      .keys b {
-        color: var(--ink);
-        font-weight: 500;
-        border: 1px solid var(--line);
-        border-radius: 4px;
-        padding: 2px 7px;
-        margin-right: 6px;
-      }
+
       #warning {
-        position: absolute;
+        position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
+        z-index: 70;
         font-size: 12px;
-        z-index: 6;
       }
       #warning div {
-        background: rgba(255, 61, 0, 0.85);
+        background: rgba(255, 61, 0, 0.9);
         color: #fff;
         padding: 8px 14px;
         font-family: var(--mono);
         font-size: 11px;
       }
+
+      /* 桌面隐藏触屏控件 */
+      @media (hover: hover) and (pointer: fine) {
+        body.is-touch .pad {
+          display: none;
+        }
+      }
+      @media (max-height: 520px) {
+        .stick {
+          width: 116px;
+          height: 116px;
+        }
+        .stick__knob {
+          width: 52px;
+          height: 52px;
+          margin: -26px 0 0 -26px;
+        }
+        .btns {
+          width: 190px;
+          height: 172px;
+        }
+        .btn-key--attack {
+          width: 70px;
+          height: 70px;
+        }
+      }
     </style>
   </head>
   <body>
-    <header class="bar">
-      <a href="../../">← 返回作品集</a>
-      <span class="mid">Beatbreaker / Playable Demo</span>
-      <div class="bar__right">
-        <a class="bar__link" href="/media/beatbreaker-demo.mp4" target="_blank" rel="noreferrer">演示视频 ↗</a>
-        <button id="fs">全屏</button>
-      </div>
-    </header>
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
 
-    <div class="stage">
-      <div class="screen" id="screen">
-        <canvas id="unity-canvas" tabindex="-1"></canvas>
-        <div class="loader" id="loader">
-          <div class="loader__title">
-            节拍破界
-            <span>BEATBREAKER</span>
-          </div>
-          <div class="loader__bar"><i id="bar"></i></div>
-          <div class="loader__pct" id="pct">0%</div>
-          <p class="loader__hint">首次加载约 17 MB · 建议先玩教学关</p>
-        </div>
-        <div id="warning"></div>
+    <div class="hud" id="hud">
+      <a class="hud__back" href="../../">← 返回作品集</a>
+      <span class="hud__title">节拍破界 <em>Beatbreaker</em></span>
+      <div class="hud__tools">
+        <button class="hud__btn" id="fs">全屏</button>
       </div>
     </div>
 
-    <footer class="keys">
+    <div class="hint" id="hint">
       <span><b>WASD</b>移动</span>
       <span><b>J</b>攻击</span>
       <span><b>K</b>防御</span>
       <span><b>L</b>冲刺</span>
       <span><b>Space</b>共鸣</span>
       <span><b>Esc</b>暂停</span>
-    </footer>
+    </div>
+
+    <div class="pad" id="pad">
+      <div class="stick" id="stick">
+        <div class="stick__knob" id="knob"></div>
+      </div>
+      <div class="btns">
+        <button class="btn-key btn-key--attack" data-key="74">攻击<small>J</small></button>
+        <button class="btn-key btn-key--guard" data-key="75">防御<small>K</small></button>
+        <button class="btn-key btn-key--dash" data-key="76">冲刺<small>L</small></button>
+        <button class="btn-key btn-key--reso" data-key="32">共鸣<small>SPACE</small></button>
+      </div>
+    </div>
+
+    <div class="rotate" id="rotate">
+      <div class="rotate__icon">▭</div>
+      <h2>请横屏体验</h2>
+      <p>《节拍破界》是横版节奏战斗，横屏才能完整显示战场和虚拟按键。</p>
+      <button id="rotateBtn">进入横屏</button>
+    </div>
+
+    <div class="loader" id="loader">
+      <div class="loader__title">节拍破界<span>BEATBREAKER</span></div>
+      <div class="loader__bar"><i id="bar"></i></div>
+      <div class="loader__pct" id="pct">0%</div>
+      <p class="loader__hint">首次加载约 17 MB · 建议先玩教学关</p>
+    </div>
+
+    <div id="warning"></div>
 
     <script>
       const canvas = document.querySelector('#unity-canvas');
@@ -223,7 +492,26 @@
       const bar = document.querySelector('#bar');
       const pct = document.querySelector('#pct');
       const warning = document.querySelector('#warning');
+      const hud = document.querySelector('#hud');
+      const hint = document.querySelector('#hint');
+      const knob = document.querySelector('#knob');
+      const stick = document.querySelector('#stick');
 
+      /* ---------------- 设备判定 ---------------- */
+      const isTouch =
+        window.matchMedia('(pointer: coarse)').matches ||
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0;
+      if (isTouch) document.body.classList.add('is-touch');
+
+      const syncOrientation = () => {
+        document.body.classList.toggle('is-portrait', window.innerHeight > window.innerWidth);
+      };
+      syncOrientation();
+      window.addEventListener('resize', syncOrientation);
+      window.addEventListener('orientationchange', () => setTimeout(syncOrientation, 120));
+
+      /* ---------------- Unity ---------------- */
       function unityShowBanner(msg, type) {
         const div = document.createElement('div');
         div.innerHTML = msg;
@@ -243,6 +531,34 @@
         showBanner: unityShowBanner,
       };
 
+      /* Unity 默认按 PlayerSettings 的 1280×720 建画布，这里强制同步成实际显示尺寸 */
+      let fitting = false;
+      function fitCanvas() {
+        if (fitting) return;
+        fitting = true;
+        const dpr = window.devicePixelRatio || 1; // 必须用真实 dpr：Unity 用 canvas.width / dpr 反推屏幕尺寸
+        const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
+        const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+        }
+        // 通知 Unity 重新计算 UI 布局
+        window.dispatchEvent(new Event('resize'));
+        setTimeout(() => {
+          fitting = false;
+        }, 60);
+      }
+      fitCanvas();
+
+      let fitTimer;
+      const refit = () => {
+        clearTimeout(fitTimer);
+        fitTimer = setTimeout(fitCanvas, 120);
+      };
+      window.addEventListener('resize', refit);
+      window.addEventListener('orientationchange', () => setTimeout(fitCanvas, 260));
+
       const script = document.createElement('script');
       script.src = buildUrl + '/webgl.loader.js';
       script.onload = () => {
@@ -253,8 +569,11 @@
         })
           .then((instance) => {
             window.unityInstance = instance;
+            [0, 300, 800, 1600, 2600].forEach((t) => setTimeout(fitCanvas, t));
             loader.classList.add('is-done');
             setTimeout(() => loader.remove(), 800);
+            setTimeout(() => hint.classList.add('is-hidden'), 9000);
+            armHudAutoHide();
           })
           .catch((message) => {
             loader.querySelector('.loader__hint').textContent = message;
@@ -262,13 +581,163 @@
       };
       document.body.appendChild(script);
 
-      document.querySelector('#fs').addEventListener('click', () => {
-        const el = document.querySelector('#screen');
-        if (!document.fullscreenElement) el.requestFullscreen?.();
-        else document.exitFullscreen?.();
+      /* ---------------- HUD 自动隐藏 ---------------- */
+      let hideTimer;
+      function armHudAutoHide() {
+        clearTimeout(hideTimer);
+        hud.classList.remove('is-hidden');
+        hideTimer = setTimeout(() => hud.classList.add('is-hidden'), 4000);
+      }
+      ['mousemove', 'pointerdown', 'keydown'].forEach((ev) =>
+        window.addEventListener(ev, armHudAutoHide, { passive: true })
+      );
+
+      /* ---------------- 全屏 / 横屏 ---------------- */
+      async function goFullscreen() {
+        const el = document.documentElement;
+        try {
+          if (!document.fullscreenElement) await el.requestFullscreen?.();
+          else await document.exitFullscreen?.();
+        } catch (e) {}
+      }
+      document.querySelector('#fs').addEventListener('click', goFullscreen);
+
+      document.querySelector('#rotateBtn').addEventListener('click', async () => {
+        await goFullscreen();
+        try {
+          await screen.orientation?.lock?.('landscape');
+        } catch (e) {}
+        syncOrientation();
       });
 
-      canvas.addEventListener('pointerdown', () => canvas.focus());
+      /* ---------------- 虚拟键盘：把按键喂给 Unity ---------------- */
+      const pressed = new Set();
+
+      // Unity WebGL 读的是 event.code / key，光有 keyCode 不生效
+      const KEYINFO = {
+        87: { code: 'KeyW', key: 'w' },
+        65: { code: 'KeyA', key: 'a' },
+        83: { code: 'KeyS', key: 's' },
+        68: { code: 'KeyD', key: 'd' },
+        74: { code: 'KeyJ', key: 'j' },
+        75: { code: 'KeyK', key: 'k' },
+        76: { code: 'KeyL', key: 'l' },
+        32: { code: 'Space', key: ' ' },
+        27: { code: 'Escape', key: 'Escape' },
+      };
+
+      function fireKey(keyCode, down) {
+        const info = KEYINFO[keyCode] || {};
+        const ev = new KeyboardEvent(down ? 'keydown' : 'keyup', {
+          bubbles: true,
+          cancelable: true,
+          key: info.key,
+          code: info.code,
+        });
+        Object.defineProperty(ev, 'keyCode', { get: () => keyCode });
+        Object.defineProperty(ev, 'which', { get: () => keyCode });
+        document.dispatchEvent(ev);
+      }
+
+      function setKey(keyCode, down) {
+        if (down && !pressed.has(keyCode)) {
+          pressed.add(keyCode);
+          fireKey(keyCode, true);
+        } else if (!down && pressed.has(keyCode)) {
+          pressed.delete(keyCode);
+          fireKey(keyCode, false);
+        }
+      }
+
+      function releaseAll() {
+        [...pressed].forEach((k) => setKey(k, false));
+      }
+
+      /* ---------------- 摇杆 ---------------- */
+      const KEY = { up: 87, down: 83, left: 65, right: 68 };
+      const RADIUS = 44;
+      const DEAD = 0.34;
+      let stickId = null;
+
+      function stickCenter() {
+        const r = stick.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }
+
+      function applyStick(dx, dy) {
+        const len = Math.hypot(dx, dy);
+        const k = len > RADIUS ? RADIUS / len : 1;
+        const ox = dx * k;
+        const oy = dy * k;
+        knob.style.transform = `translate(${ox}px, ${oy}px)`;
+        const nx = ox / RADIUS;
+        const ny = oy / RADIUS;
+        setKey(KEY.left, nx < -DEAD);
+        setKey(KEY.right, nx > DEAD);
+        setKey(KEY.up, ny < -DEAD);
+        setKey(KEY.down, ny > DEAD);
+      }
+
+      function resetStick() {
+        knob.style.transform = 'translate(0px, 0px)';
+        [KEY.up, KEY.down, KEY.left, KEY.right].forEach((k) => setKey(k, false));
+      }
+
+      stick.addEventListener('pointerdown', (e) => {
+        stickId = e.pointerId;
+        stick.setPointerCapture(e.pointerId);
+        const c = stickCenter();
+        applyStick(e.clientX - c.x, e.clientY - c.y);
+        e.preventDefault();
+      });
+      stick.addEventListener('pointermove', (e) => {
+        if (e.pointerId !== stickId) return;
+        const c = stickCenter();
+        applyStick(e.clientX - c.x, e.clientY - c.y);
+        e.preventDefault();
+      });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) =>
+        stick.addEventListener(ev, (e) => {
+          if (e.pointerId !== stickId) return;
+          stickId = null;
+          resetStick();
+        })
+      );
+
+      /* ---------------- 技能按钮 ---------------- */
+      document.querySelectorAll('.btn-key').forEach((btn) => {
+        const code = Number(btn.dataset.key);
+        const down = (e) => {
+          btn.classList.add('is-down');
+          setKey(code, true);
+          btn.setPointerCapture?.(e.pointerId);
+          e.preventDefault();
+        };
+        const up = () => {
+          btn.classList.remove('is-down');
+          setKey(code, false);
+        };
+        btn.addEventListener('pointerdown', down);
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) =>
+          btn.addEventListener(ev, up)
+        );
+        btn.addEventListener('contextmenu', (e) => e.preventDefault());
+      });
+
+      /* ---------------- 兜底：失焦时松开所有键 ---------------- */
+      window.addEventListener('blur', () => {
+        releaseAll();
+        resetStick();
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          releaseAll();
+          resetStick();
+        }
+      });
+      document.addEventListener('contextmenu', (e) => {
+        if (isTouch) e.preventDefault();
+      });
     </script>
   </body>
 </html>
