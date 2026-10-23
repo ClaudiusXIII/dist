@@ -167,21 +167,84 @@
         pointer-events: auto;
       }
 
+      /* 浮空摇杆：按下时才出现在手指位置 */
       .stick {
-        position: absolute;
-        left: max(24px, env(safe-area-inset-left));
-        bottom: max(24px, env(safe-area-inset-bottom));
+        position: fixed;
+        left: 0;
+        top: 0;
         width: 132px;
         height: 132px;
+        margin: -66px 0 0 -66px;
         border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.22);
         background: radial-gradient(
           circle at 50% 50%,
-          rgba(127, 176, 255, 0.14),
+          rgba(127, 176, 255, 0.16),
           rgba(6, 10, 20, 0.42)
         );
         backdrop-filter: blur(6px);
         touch-action: none;
+        opacity: 0;
+        transform: scale(0.86);
+        transition: opacity 0.16s ease, transform 0.16s ease;
+        pointer-events: none;
+      }
+      .stick.is-active {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      /* 触摸区：左半边（避开顶部 HUD 和右下技能键） */
+      .pad__zone {
+        position: fixed;
+        left: 0;
+        top: 52px;
+        bottom: 0;
+        width: 58%;
+        touch-action: none;
+        pointer-events: auto;
+      }
+
+      /* 首次提示，用过一次就消失 */
+      .stick-hint {
+        position: fixed;
+        left: max(20px, env(safe-area-inset-left));
+        bottom: max(20px, env(safe-area-inset-bottom));
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 13px;
+        border-radius: 999px;
+        border: 1px dashed rgba(255, 255, 255, 0.22);
+        background: rgba(6, 10, 20, 0.35);
+        font-family: var(--mono);
+        font-size: 9.5px;
+        letter-spacing: 0.12em;
+        color: var(--ink-30);
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+      }
+      .stick-hint i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 10px rgba(127, 176, 255, 0.9);
+        animation: hintPulse 1.8s ease-in-out infinite;
+      }
+      @keyframes hintPulse {
+        0%,
+        100% {
+          opacity: 0.35;
+          transform: scale(0.8);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.15);
+        }
+      }
+      body.has-sticked .stick-hint {
+        opacity: 0;
       }
       .stick::before {
         content: '';
@@ -459,9 +522,11 @@
     </div>
 
     <div class="pad" id="pad">
+      <div class="pad__zone" id="zone"></div>
       <div class="stick" id="stick">
         <div class="stick__knob" id="knob"></div>
       </div>
+      <div class="stick-hint" id="stickHint"><i></i>左侧滑动移动</div>
       <div class="btns">
         <button class="btn-key btn-key--attack" data-key="74">攻击<small>J</small></button>
         <button class="btn-key btn-key--guard" data-key="75">防御<small>K</small></button>
@@ -496,6 +561,7 @@
       const hint = document.querySelector('#hint');
       const knob = document.querySelector('#knob');
       const stick = document.querySelector('#stick');
+      const zone = document.querySelector('#zone');
 
       /* ---------------- 设备判定 ---------------- */
       const isTouch =
@@ -653,16 +719,13 @@
         [...pressed].forEach((k) => setKey(k, false));
       }
 
-      /* ---------------- 摇杆 ---------------- */
+      /* ---------------- 浮空摇杆 ---------------- */
       const KEY = { up: 87, down: 83, left: 65, right: 68 };
-      const RADIUS = 44;
-      const DEAD = 0.34;
+      const RADIUS = 44;   // 摇杆可推动半径
+      const DEAD = 0.34;   // 死区
+      const BASE_R = 66;   // 底盘半径（132 / 2）
       let stickId = null;
-
-      function stickCenter() {
-        const r = stick.getBoundingClientRect();
-        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-      }
+      let origin = { x: 0, y: 0 };
 
       function applyStick(dx, dy) {
         const len = Math.hypot(dx, dy);
@@ -683,24 +746,41 @@
         [KEY.up, KEY.down, KEY.left, KEY.right].forEach((k) => setKey(k, false));
       }
 
-      stick.addEventListener('pointerdown', (e) => {
+      function hideStick() {
+        stick.classList.remove('is-active');
+        resetStick();
+      }
+
+      // 按下位置即摇杆中心（贴边时向内收，保证整圈可见）
+      zone.addEventListener('pointerdown', (e) => {
+        if (stickId !== null) return;
         stickId = e.pointerId;
-        stick.setPointerCapture(e.pointerId);
-        const c = stickCenter();
-        applyStick(e.clientX - c.x, e.clientY - c.y);
+        zone.setPointerCapture(e.pointerId);
+
+        const pad = 6;
+        const x = Math.min(Math.max(e.clientX, BASE_R + pad), window.innerWidth - BASE_R - pad);
+        const y = Math.min(Math.max(e.clientY, BASE_R + pad), window.innerHeight - BASE_R - pad);
+
+        origin = { x, y };
+        stick.style.left = x + 'px';
+        stick.style.top = y + 'px';
+        stick.classList.add('is-active');
+        document.body.classList.add('has-sticked');
+        applyStick(0, 0);
         e.preventDefault();
       });
-      stick.addEventListener('pointermove', (e) => {
+
+      zone.addEventListener('pointermove', (e) => {
         if (e.pointerId !== stickId) return;
-        const c = stickCenter();
-        applyStick(e.clientX - c.x, e.clientY - c.y);
+        applyStick(e.clientX - origin.x, e.clientY - origin.y);
         e.preventDefault();
       });
-      ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) =>
-        stick.addEventListener(ev, (e) => {
+
+      ['pointerup', 'pointercancel'].forEach((ev) =>
+        zone.addEventListener(ev, (e) => {
           if (e.pointerId !== stickId) return;
           stickId = null;
-          resetStick();
+          hideStick();
         })
       );
 
@@ -727,12 +807,14 @@
       /* ---------------- 兜底：失焦时松开所有键 ---------------- */
       window.addEventListener('blur', () => {
         releaseAll();
-        resetStick();
+        stickId = null;
+        hideStick();
       });
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
           releaseAll();
-          resetStick();
+          stickId = null;
+          hideStick();
         }
       });
       document.addEventListener('contextmenu', (e) => {
