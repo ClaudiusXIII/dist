@@ -625,6 +625,17 @@
           .then((instance) => {
             window.unityInstance = instance;
             [0, 300, 800, 1600, 2600].forEach((t) => setTimeout(fitCanvas, t));
+
+            // 触屏设备关闭「鼠标左键=攻击 / 右键=防御」，
+            // 否则拖摇杆时 Unity 会把触摸当成 Mouse0 误触发攻击
+            const applyInputMode = () => {
+              try {
+                instance.SendMessage('WebBridge', 'SetMouseInput', isTouch ? '0' : '1');
+              } catch (err) {}
+            };
+            applyInputMode();
+            setTimeout(applyInputMode, 700);
+
             loader.classList.add('is-done');
             setTimeout(() => loader.remove(), 800);
             setTimeout(() => hint.classList.add('is-hidden'), 9000);
