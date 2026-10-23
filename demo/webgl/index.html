@@ -194,16 +194,7 @@
         transform: scale(1);
       }
 
-      /* 触摸区：左半边（避开顶部 HUD 和右下技能键） */
-      .pad__zone {
-        position: fixed;
-        left: 0;
-        top: 52px;
-        bottom: 0;
-        width: 58%;
-        touch-action: none;
-        pointer-events: auto;
-      }
+      /* 触摸区不再拦截事件：点按直接传给游戏，拖动才唤出摇杆 */
 
       /* 首次提示，用过一次就消失 */
       .stick-hint {
@@ -522,7 +513,6 @@
     </div>
 
     <div class="pad" id="pad">
-      <div class="pad__zone" id="zone"></div>
       <div class="stick" id="stick">
         <div class="stick__knob" id="knob"></div>
       </div>
@@ -561,7 +551,6 @@
       const hint = document.querySelector('#hint');
       const knob = document.querySelector('#knob');
       const stick = document.querySelector('#stick');
-      const zone = document.querySelector('#zone');
 
       /* ---------------- 设备判定 ---------------- */
       const isTouch =
@@ -751,37 +740,75 @@
         resetStick();
       }
 
-      // 按下位置即摇杆中心（贴边时向内收，保证整圈可见）
-      zone.addEventListener('pointerdown', (e) => {
-        if (stickId !== null) return;
-        stickId = e.pointerId;
-        zone.setPointerCapture(e.pointerId);
+      /* 摇杆不占用触摸区：
+         点按（<9px）不拦截，直接交给 Unity 的 UI 按钮；
+         只有拖动超过阈值才唤出摇杆，所以菜单按钮照常能点。 */
+      const DRAG_START = 9;
+      let pending = null;
 
+      function activate(p) {
+        stickId = p.id;
         const pad = 6;
-        const x = Math.min(Math.max(e.clientX, BASE_R + pad), window.innerWidth - BASE_R - pad);
-        const y = Math.min(Math.max(e.clientY, BASE_R + pad), window.innerHeight - BASE_R - pad);
-
+        const x = Math.min(Math.max(p.x, BASE_R + pad), window.innerWidth - BASE_R - pad);
+        const y = Math.min(Math.max(p.y, BASE_R + pad), window.innerHeight - BASE_R - pad);
         origin = { x, y };
         stick.style.left = x + 'px';
         stick.style.top = y + 'px';
         stick.classList.add('is-active');
         document.body.classList.add('has-sticked');
         applyStick(0, 0);
-        e.preventDefault();
-      });
+      }
 
-      zone.addEventListener('pointermove', (e) => {
-        if (e.pointerId !== stickId) return;
-        applyStick(e.clientX - origin.x, e.clientY - origin.y);
-        e.preventDefault();
-      });
+      function inZone(e) {
+        return e.clientX < window.innerWidth * 0.58 && e.clientY > 52;
+      }
+
+      document.addEventListener(
+        'pointerdown',
+        (e) => {
+          if (!isTouch || !inZone(e)) return;
+          if (e.target.closest?.('.btn-key, .hud, .rotate, .loader')) return;
+          if (stickId !== null || pending) return;
+          pending = { id: e.pointerId, x: e.clientX, y: e.clientY };
+        },
+        true
+      );
+
+      document.addEventListener(
+        'pointermove',
+        (e) => {
+          if (pending && e.pointerId === pending.id) {
+            const d = Math.hypot(e.clientX - pending.x, e.clientY - pending.y);
+            if (d > DRAG_START) {
+              const p = pending;
+              pending = null;
+              activate(p);
+              applyStick(e.clientX - p.x, e.clientY - p.y);
+            }
+            return;
+          }
+          if (stickId !== null && e.pointerId === stickId) {
+            applyStick(e.clientX - origin.x, e.clientY - origin.y);
+          }
+        },
+        true
+      );
 
       ['pointerup', 'pointercancel'].forEach((ev) =>
-        zone.addEventListener(ev, (e) => {
-          if (e.pointerId !== stickId) return;
-          stickId = null;
-          hideStick();
-        })
+        document.addEventListener(
+          ev,
+          (e) => {
+            if (pending && e.pointerId === pending.id) {
+              pending = null;
+              return;
+            }
+            if (stickId !== null && e.pointerId === stickId) {
+              stickId = null;
+              hideStick();
+            }
+          },
+          true
+        )
       );
 
       /* ---------------- 技能按钮 ---------------- */
