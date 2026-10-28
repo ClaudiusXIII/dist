@@ -1,0 +1,9 @@
+# 下载专用路径：强制浏览器另存为，绕开百度/UC 等浏览器的内置 PDF 预览器
+/download/*
+  Content-Disposition: attachment
+  Content-Type: application/pdf
+
+# 在线预览路径保持 inline
+/docs/*.pdf
+  Content-Type: application/pdf
+  Content-Disposition: inline
