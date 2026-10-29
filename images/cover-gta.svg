@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="750" viewBox="0 0 1200 750">
+  <defs>
+    <pattern id="g2" width="50" height="50" patternUnits="userSpaceOnUse">
+      <path d="M50 0H0V50" fill="none" stroke="#ffffff" stroke-opacity="0.055" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="glow2" cx="0.74" cy="0.30" r="0.55">
+      <stop offset="0" stop-color="#8B5CF6" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#2E6BFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="t2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#D6CCFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="#060A16"/>
+  <rect width="1200" height="750" fill="url(#g2)"/>
+  <rect width="1200" height="750" fill="url(#glow2)"/>
+
+  <g fill="#ffffff">
+    <circle cx="120" cy="90" r="1.2" opacity="0.45"/>
+    <circle cx="380" cy="140" r="1" opacity="0.3"/>
+    <circle cx="1020" cy="90" r="1.4" opacity="0.45"/>
+    <circle cx="880" cy="600" r="1" opacity="0.3"/>
+    <circle cx="260" cy="660" r="1.2" opacity="0.35"/>
+  </g>
+
+  <g transform="translate(660,80)" opacity="0.92">
+    <path d="M40 470 L150 300 L250 380 L330 210 L430 300 L520 140"
+          fill="none" stroke="#B78CFF" stroke-width="2" stroke-dasharray="7 7"/>
+    <g fill="#EAF0FF">
+      <circle cx="40" cy="470" r="6"/>
+      <circle cx="250" cy="380" r="6"/>
+      <circle cx="430" cy="300" r="6"/>
+    </g>
+    <g fill="#B78CFF">
+      <circle cx="150" cy="300" r="9"/>
+      <circle cx="330" cy="210" r="9"/>
+      <circle cx="520" cy="140" r="11"/>
+    </g>
+    <g stroke="#ffffff" stroke-opacity="0.18" stroke-width="1">
+      <path d="M0 520 H520"/>
+      <path d="M0 520 V80"/>
+    </g>
+    <g fill="#ffffff" fill-opacity="0.34" font-family="Consolas, monospace" font-size="12" letter-spacing="2">
+      <text x="0" y="548">MISSION PACING / 0 → 60 MIN</text>
+    </g>
+  </g>
+
+  <g fill="#ffffff" fill-opacity="0.42" font-family="Consolas, monospace" font-size="14" letter-spacing="4">
+    <text x="72" y="86">CASE 03 — OPEN WORLD TEARDOWN</text>
+  </g>
+
+  <g font-family="Arial Black, Archivo, sans-serif" font-weight="800" fill="url(#t2)">
+    <text x="68" y="430" font-size="150" letter-spacing="-4">GTA V</text>
+  </g>
+  <text x="72" y="500" fill="#B78CFF" font-family="Microsoft YaHei, sans-serif" font-size="26" letter-spacing="8">开 放 世 界 · 任 务 节 奏 拆 解</text>
+  <text x="72" y="552" fill="#ffffff" fill-opacity="0.45" font-family="Microsoft YaHei, sans-serif" font-size="17" letter-spacing="2">叙事结构 / 数值经济 / 长线运营</text>
+
+  <line x1="72" y1="640" x2="1128" y2="640" stroke="#ffffff" stroke-opacity="0.14"/>
+  <g fill="#ffffff" fill-opacity="0.38" font-family="Consolas, monospace" font-size="14" letter-spacing="3">
+    <text x="72" y="682">WORLD / MISSION / ECONOMY</text>
+    <text x="800" y="682">05 DIMENSIONS · 1 DOC</text>
+  </g>
+</svg>
